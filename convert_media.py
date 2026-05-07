@@ -199,6 +199,7 @@ def convert_heic_to_jpg(source_path: Path, quality: int = 95) -> Path:
 
 def convert_mov_to_mkv(source_path: Path, ffmpeg_path: str = 'ffmpeg') -> Path:
     output_path = source_path.with_suffix('.mkv')
+
     if output_path.exists():
         print(f"Skipping existing MKV: {output_path.name}")
         return output_path
@@ -209,17 +210,27 @@ def convert_mov_to_mkv(source_path: Path, ffmpeg_path: str = 'ffmpeg') -> Path:
         '-hide_banner',
         '-loglevel', 'error',
         '-i', str(source_path),
+
+        # Preserve original video resolution/orientation
+        '-map_metadata', '0',
+        '-movflags', 'use_metadata_tags',
+
+        # Video encoding
         '-c:v', 'libx265',
         '-preset', 'medium',
-        '-crf', '28',
-        '-vf', 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2',
+        '-crf', '23',
+
+        # Preserve audio
         '-c:a', 'aac',
-        '-b:a', '128k',
+        '-b:a', '192k',
+
         str(output_path),
     ]
 
     subprocess.run(ffmpeg_args, check=True)
+
     print(f"Converted: {source_path.name} -> {output_path.name}")
+
     return output_path
 
 
